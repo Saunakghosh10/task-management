@@ -92,7 +92,7 @@ export function Dashboard({ user }: { user: User }) {
               <CardDescription>Owner: {taskList.owner}</CardDescription>
             </CardHeader>
             <CardContent>
-              <TaskList taskListId={taskList._id} userId={''} />
+              <TaskList taskListId={taskList._id} userId={user.id} />
             </CardContent>
             <CardFooter>
               <Button variant="destructive" onClick={() => handleDeleteTaskList(taskList._id)}>Delete List</Button>

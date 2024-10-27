@@ -24,15 +24,27 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchTasks();
   }, [taskListId]);
 
   const fetchTasks = async () => {
-    const response = await fetch(`/api/tasks?taskListId=${taskListId}`);
-    const data = await response.json();
-    setTasks(data);
+    try {
+      const response = await fetch(`/api/tasks?taskListId=${taskListId}&userId=${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      const data = await response.json();
+      // Ensure data is an array
+      setTasks(Array.isArray(data) ? data : []);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      setError('Failed to load tasks');
+      setTasks([]);
+    }
   };
 
   const handleCreateTask = async (newTask: Omit<Task, '_id'>) => {
@@ -50,9 +62,10 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
       const createdTask = await response.json();
       setTasks([...tasks, createdTask]);
       setShowCreateTask(false);
+      setError(null);
     } catch (error) {
       console.error('Error creating task:', error);
-      // Handle error (e.g., show an error message to the user)
+      setError('Failed to create task');
     }
   }
 
@@ -61,7 +74,7 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
       const response = await fetch(`/api/tasks/${updatedTask._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedTask),
+        body: JSON.stringify({ ...updatedTask, userId }),
       });
       if (!response.ok) {
         throw new Error('Failed to update task');
@@ -69,29 +82,38 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
       const updatedTaskData = await response.json();
       setTasks(tasks.map(task => task._id === updatedTaskData._id ? updatedTaskData : task));
       setSelectedTask(null);
+      setError(null);
     } catch (error) {
       console.error('Error updating task:', error);
-      // Handle error (e.g., show an error message to the user)
+      setError('Failed to update task');
     }
   }
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-      const response = await fetch(`/api/tasks/${taskId}`, {
+      const response = await fetch(`/api/tasks/${taskId}?userId=${userId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
         throw new Error('Failed to delete task');
       }
       setTasks(tasks.filter(task => task._id !== taskId));
+      setError(null);
     } catch (error) {
       console.error('Error deleting task:', error);
-      // Handle error (e.g., show an error message to the user)
+      setError('Failed to delete task');
     }
   }
 
+  const handleCloseTaskDetails = () => {
+    setSelectedTask(null);
+  };
+
   return (
     <div>
+      {error && (
+        <div className="text-red-500 mb-4">{error}</div>
+      )}
       {tasks.map((task) => (
         <Card key={task._id} className="mb-4">
           <CardHeader>
@@ -116,11 +138,12 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
         </Button>
       )}
       {selectedTask && (
-        <TaskDetails task={selectedTask} onUpdateTask={handleUpdateTask} onDeleteTask={function (taskId: string): void {
-          throw new Error('Function not implemented.')
-        } } onClose={function (): void {
-          throw new Error('Function not implemented.')
-        } } />
+        <TaskDetails 
+          task={selectedTask} 
+          onUpdateTask={handleUpdateTask} 
+          onDeleteTask={handleDeleteTask}
+          onClose={handleCloseTaskDetails}
+        />
       )}
     </div>
   )

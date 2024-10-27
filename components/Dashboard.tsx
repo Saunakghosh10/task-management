@@ -1,21 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { User } from '@clerk/nextjs/server'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import CreateTask from './CreateTask'
 import { CreateTaskList } from './CreateTaskList'
 import TaskList from './TaskList'
-
-type User = {
-  firstName: string;
-  id: string;
-  fullName: string;
-  username: string;
-}
+import { UserButton } from "@clerk/nextjs";
 
 type TaskList = {
-  id: string
+  _id: string
   name: string
   owner: string
 }
@@ -24,25 +18,42 @@ export function Dashboard({ user }: { user: User }) {
   const [taskLists, setTaskLists] = useState<TaskList[]>([])
   const [showCreateTaskList, setShowCreateTaskList] = useState(false)
 
-  const handleCreateTaskList = (newTaskList: TaskList) => {
-    setTaskLists([...taskLists, newTaskList])
-    setShowCreateTaskList(false)
+  useEffect(() => {
+    fetchTaskLists();
+  }, []);
+
+  const fetchTaskLists = async () => {
+    const response = await fetch('/api/tasklists');
+    const data = await response.json();
+    setTaskLists(data);
+  };
+
+  const handleCreateTaskList = async (newTaskList: Omit<TaskList, '_id'>) => {
+    const response = await fetch('/api/tasklists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newTaskList),
+    });
+    const createdTaskList = await response.json();
+    setTaskLists([...taskLists, createdTaskList]);
+    setShowCreateTaskList(false);
   }
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Welcome, {user.firstName}!</h1>
+        <UserButton afterSignOutUrl="/" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {taskLists.map((taskList) => (
-          <Card key={taskList.id}>
+          <Card key={taskList._id}>
             <CardHeader>
               <CardTitle>{taskList.name}</CardTitle>
               <CardDescription>Owner: {taskList.owner}</CardDescription>
             </CardHeader>
             <CardContent>
-              <TaskList taskListId={taskList.id} />
+              <TaskList taskListId={taskList._id} />
             </CardContent>
           </Card>
         ))}

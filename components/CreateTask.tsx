@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 type Task = {
-  id: string
   title: string
   description: string
   dueDate: string
@@ -30,16 +29,16 @@ export default function CreateTask({ onCreateTask, taskListId }: CreateTaskProps
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (title.trim() && description.trim() && dueDate && assignedUser.trim()) {
+    if (title && description && dueDate && status && assignedUser) {
       const newTask: Task = {
-        id: Date.now().toString(),
-        title: title.trim(),
-        description: description.trim(),
+        title,
+        description,
         dueDate,
         status,
-        assignedUser: assignedUser.trim(),
+        assignedUser,
       }
       onCreateTask(newTask)
+      // Reset form fields
       setTitle('')
       setDescription('')
       setDueDate('')

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 type TaskList = {
-  id: string
   name: string
   owner: string
 }
@@ -24,9 +23,8 @@ export function CreateTaskList({ onCreateTaskList, user }: CreateTaskListProps) 
     e.preventDefault()
     if (name.trim()) {
       const newTaskList: TaskList = {
-        id: Date.now().toString(),
         name: name.trim(),
-        owner: user.fullName || user.username || 'Unknown',
+        owner: user.id,
       }
       onCreateTaskList(newTaskList)
       setName('')

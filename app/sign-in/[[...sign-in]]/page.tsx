@@ -1,5 +1,27 @@
+'use client'
+
 import { SignIn } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
-  return <div>Sign In Page (Placeholder)</div>;
+  const { userId } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (userId) {
+      router.push('/dashboard');
+    }
+  }, [userId, router]);
+
+  if (userId) {
+    return null; // or a loading spinner
+  }
+
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-background">
+      <SignIn afterSignInUrl="/dashboard" signUpUrl="/sign-up" />
+    </div>
+  );
 }

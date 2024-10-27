@@ -3,25 +3,27 @@
 import { SignIn } from "@clerk/nextjs";
 import { useAuth } from "@clerk/nextjs";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignInPage() {
   const { userId } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect_url') || '/dashboard';
 
   useEffect(() => {
     if (userId) {
-      router.push('/dashboard');
+      router.push(redirectUrl);
     }
-  }, [userId, router]);
+  }, [userId, router, redirectUrl]);
 
   if (userId) {
     return null; // or a loading spinner
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-background">
-      <SignIn afterSignInUrl="/dashboard" signUpUrl="/sign-up" />
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-600">
+      <SignIn afterSignInUrl={redirectUrl} signUpUrl="/sign-up" />
     </div>
   );
 }

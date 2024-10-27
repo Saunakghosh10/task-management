@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 
 type Task = {
-  id: string
+  _id: string
   title: string
   description: string
   dueDate: string
@@ -19,9 +19,11 @@ type Task = {
 type TaskDetailsProps = {
   task: Task
   onUpdateTask: (task: Task) => void
+  onDeleteTask: (taskId: string) => void
+  onClose: () => void
 }
 
-export function TaskDetails({ task, onUpdateTask }: TaskDetailsProps) {
+export function TaskDetails({ task, onUpdateTask, onDeleteTask, onClose }: TaskDetailsProps) {
   const [editedTask, setEditedTask] = useState(task)
   const [isOpen, setIsOpen] = useState(true)
 
@@ -29,6 +31,13 @@ export function TaskDetails({ task, onUpdateTask }: TaskDetailsProps) {
     e.preventDefault()
     onUpdateTask(editedTask)
     setIsOpen(false)
+    onClose()
+  }
+
+  const handleDelete = () => {
+    onDeleteTask(task._id)
+    setIsOpen(false)
+    onClose()
   }
 
   return (
@@ -81,6 +90,7 @@ export function TaskDetails({ task, onUpdateTask }: TaskDetailsProps) {
           </div>
           <DialogFooter className="mt-4">
             <Button type="submit">Update Task</Button>
+            <Button type="button" variant="destructive" onClick={handleDelete}>Delete Task</Button>
           </DialogFooter>
         </form>
       </DialogContent>

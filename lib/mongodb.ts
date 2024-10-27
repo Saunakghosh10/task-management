@@ -1,5 +1,12 @@
 import mongoose from 'mongoose';
 
+declare global {
+  var mongoose: {
+    conn: mongoose.Connection | null
+    promise: Promise<mongoose.Connection> | null
+  }
+}
+
 const MONGODB_URI = process.env.MONGODB_URI!;
 
 if (!MONGODB_URI) {
@@ -23,7 +30,7 @@ async function dbConnect() {
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
+      return mongoose.connection;
     });
   }
 

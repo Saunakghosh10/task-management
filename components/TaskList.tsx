@@ -56,14 +56,37 @@ export default function TaskList({ taskListId }: TaskListProps) {
   }
 
   const handleUpdateTask = async (updatedTask: Task) => {
-    const response = await fetch(`/api/tasks/${updatedTask._id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedTask),
-    });
-    const updatedTaskData = await response.json();
-    setTasks(tasks.map(task => task._id === updatedTaskData._id ? updatedTaskData : task));
-    setSelectedTask(null);
+    try {
+      const response = await fetch(`/api/tasks/${updatedTask._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTask),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update task');
+      }
+      const updatedTaskData = await response.json();
+      setTasks(tasks.map(task => task._id === updatedTaskData._id ? updatedTaskData : task));
+      setSelectedTask(null);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      // Handle error (e.g., show an error message to the user)
+    }
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
+      setTasks(tasks.filter(task => task._id !== taskId));
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      // Handle error (e.g., show an error message to the user)
+    }
   }
 
   return (
@@ -79,7 +102,8 @@ export default function TaskList({ taskListId }: TaskListProps) {
             <p>Assigned to: {task.assignedUser}</p>
           </CardContent>
           <CardFooter>
-            <Button onClick={() => setSelectedTask(task)}>View Details</Button>
+            <Button onClick={() => setSelectedTask(task)} className="mr-2">View Details</Button>
+            <Button variant="destructive" onClick={() => handleDeleteTask(task._id)}>Delete</Button>
           </CardFooter>
         </Card>
       ))}
@@ -91,7 +115,11 @@ export default function TaskList({ taskListId }: TaskListProps) {
         </Button>
       )}
       {selectedTask && (
-        <TaskDetails task={selectedTask} onUpdateTask={handleUpdateTask} />
+        <TaskDetails task={selectedTask} onUpdateTask={handleUpdateTask} onDeleteTask={function (taskId: string): void {
+          throw new Error('Function not implemented.')
+        } } onClose={function (): void {
+          throw new Error('Function not implemented.')
+        } } />
       )}
     </div>
   )

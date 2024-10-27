@@ -5,9 +5,16 @@ import Task from '@/models/Task';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const taskListId = searchParams.get('taskListId');
+  
   await dbConnect();
-  const tasks = await Task.find({ taskListId });
-  return NextResponse.json(tasks);
+  
+  if (taskListId) {
+    const tasks = await Task.find({ taskListId });
+    return NextResponse.json(tasks);
+  } else {
+    const tasks = await Task.find({});
+    return NextResponse.json(tasks);
+  }
 }
 
 export async function POST(request: Request) {

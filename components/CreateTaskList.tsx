@@ -24,7 +24,7 @@ export function CreateTaskList({ onCreateTaskList, user }: CreateTaskListProps) 
     if (name.trim()) {
       const newTaskList: TaskList = {
         name: name.trim(),
-        owner: user.id,
+        owner: `${user.firstName} ${user.lastName}`.trim(), // Use full name
       }
       onCreateTaskList(newTaskList)
       setName('')

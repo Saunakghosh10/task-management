@@ -20,7 +20,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-background">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-600">
       <SignUp afterSignUpUrl="/dashboard" signInUrl="/sign-in" />
     </div>
   );

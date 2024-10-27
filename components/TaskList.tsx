@@ -17,9 +17,10 @@ type Task = {
 
 type TaskListProps = {
   taskListId: string
+  userId: string
 }
 
-export default function TaskList({ taskListId }: TaskListProps) {
+export default function TaskList({ taskListId, userId }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -41,7 +42,7 @@ export default function TaskList({ taskListId }: TaskListProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...newTask, taskListId }),
+        body: JSON.stringify({ ...newTask, taskListId, userId }),
       });
       if (!response.ok) {
         throw new Error('Failed to create task');

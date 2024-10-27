@@ -7,8 +7,16 @@ export async function DELETE(
   { params }: { params: { taskId: string } }
 ) {
   const { taskId } = params;
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+
   await dbConnect();
-  const deletedTask = await Task.findByIdAndDelete(taskId);
+
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  }
+
+  const deletedTask = await Task.findOneAndDelete({ _id: taskId, userId });
   if (!deletedTask) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }

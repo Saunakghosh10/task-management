@@ -26,7 +26,7 @@ export function Dashboard({ user }: { user: User }) {
   }, []);
 
   const fetchTaskLists = async () => {
-    const response = await fetch('/api/tasklists');
+    const response = await fetch(`/api/tasklists?userId=${user.id}`);
     const data = await response.json();
     setTaskLists(data);
   };
@@ -92,7 +92,7 @@ export function Dashboard({ user }: { user: User }) {
               <CardDescription>Owner: {taskList.owner}</CardDescription>
             </CardHeader>
             <CardContent>
-              <TaskList taskListId={taskList._id} />
+              <TaskList taskListId={taskList._id} userId={''} />
             </CardContent>
             <CardFooter>
               <Button variant="destructive" onClick={() => handleDeleteTaskList(taskList._id)}>Delete List</Button>

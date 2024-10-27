@@ -9,6 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 type TaskList = {
   name: string
   owner: string
+  userId: string
 }
 
 type CreateTaskListProps = {
@@ -24,7 +25,8 @@ export function CreateTaskList({ onCreateTaskList, user }: CreateTaskListProps) 
     if (name.trim()) {
       const newTaskList: TaskList = {
         name: name.trim(),
-        owner: `${user.firstName} ${user.lastName}`.trim(), // Use full name
+        owner: `${user.firstName} ${user.lastName}`.trim(),
+        userId: user.id,
       }
       onCreateTaskList(newTaskList)
       setName('')

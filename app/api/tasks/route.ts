@@ -5,14 +5,19 @@ import Task from '@/models/Task';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const taskListId = searchParams.get('taskListId');
+  const userId = searchParams.get('userId');
   
   await dbConnect();
   
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  }
+  
   if (taskListId) {
-    const tasks = await Task.find({ taskListId });
+    const tasks = await Task.find({ taskListId, userId });
     return NextResponse.json(tasks);
   } else {
-    const tasks = await Task.find({});
+    const tasks = await Task.find({ userId });
     return NextResponse.json(tasks);
   }
 }

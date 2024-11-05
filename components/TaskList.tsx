@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import CreateTask from './CreateTask'
 import { TaskDetails } from './TaskDetails'
+import { motion, AnimatePresence } from "framer-motion"
+import { Plus, CheckCircle, Circle, Clock } from "lucide-react"
+import gsap from 'gsap'
 
 type Task = {
   _id: string
@@ -29,6 +32,14 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
   useEffect(() => {
     fetchTasks();
   }, [taskListId]);
+
+  useEffect(() => {
+    // GSAP animation for task status changes
+    gsap.fromTo(".task-status",
+      { scale: 0.5, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.5, stagger: 0.1 }
+    )
+  }, [tasks])
 
   const fetchTasks = async () => {
     try {
@@ -60,7 +71,7 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
         throw new Error('Failed to create task');
       }
       const createdTask = await response.json();
-      setTasks([...tasks, createdTask]);
+      setTasks(prevTasks => [...prevTasks, createdTask]);
       setShowCreateTask(false);
       setError(null);
     } catch (error) {
@@ -73,14 +84,18 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
     try {
       const response = await fetch(`/api/tasks/${updatedTask._id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ ...updatedTask, userId }),
       });
       if (!response.ok) {
         throw new Error('Failed to update task');
       }
-      const updatedTaskData = await response.json();
-      setTasks(tasks.map(task => task._id === updatedTaskData._id ? updatedTaskData : task));
+      const updated = await response.json();
+      setTasks(prevTasks => 
+        prevTasks.map(task => task._id === updated._id ? updated : task)
+      );
       setSelectedTask(null);
       setError(null);
     } catch (error) {
@@ -97,7 +112,8 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
       if (!response.ok) {
         throw new Error('Failed to delete task');
       }
-      setTasks(tasks.filter(task => task._id !== taskId));
+      setTasks(prevTasks => prevTasks.filter(task => task._id !== taskId));
+      setSelectedTask(null);
       setError(null);
     } catch (error) {
       console.error('Error deleting task:', error);
@@ -109,42 +125,88 @@ export default function TaskList({ taskListId, userId }: TaskListProps) {
     setSelectedTask(null);
   };
 
+  const getStatusIcon = (status: Task['status']) => {
+    switch (status) {
+      case 'Completed':
+        return <CheckCircle className="h-5 w-5 text-green-500" />
+      case 'In Progress':
+        return <Clock className="h-5 w-5 text-yellow-500" />
+      default:
+        return <Circle className="h-5 w-5 text-gray-400" />
+    }
+  }
+
   return (
-    <div>
+    <div className="space-y-4">
       {error && (
-        <div className="text-red-500 mb-4">{error}</div>
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="text-red-500 text-sm p-2 bg-red-50 rounded"
+        >
+          {error}
+        </motion.div>
       )}
-      {tasks.map((task) => (
-        <Card key={task._id} className="mb-4">
-          <CardHeader>
-            <CardTitle>{task.title}</CardTitle>
-            <CardDescription>Due: {new Date(task.dueDate).toLocaleDateString()}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Status: {task.status}</p>
-            <p>Assigned to: {task.assignedUser}</p>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={() => setSelectedTask(task)} className="mr-2">View Details</Button>
-            <Button variant="destructive" onClick={() => handleDeleteTask(task._id)}>Delete</Button>
-          </CardFooter>
-        </Card>
-      ))}
-      {showCreateTask ? (
-        <CreateTask onCreateTask={handleCreateTask} taskListId={taskListId} />
-      ) : (
-        <Button onClick={() => setShowCreateTask(true)} className="mt-4">
-          Add New Task
-        </Button>
-      )}
-      {selectedTask && (
-        <TaskDetails 
-          task={selectedTask} 
-          onUpdateTask={handleUpdateTask} 
-          onDeleteTask={handleDeleteTask}
-          onClose={handleCloseTaskDetails}
-        />
-      )}
+
+      <AnimatePresence>
+        {tasks.map((task) => (
+          <motion.div
+            key={task._id}
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 20, opacity: 0 }}
+            whileHover={{ scale: 1.02 }}
+            className="task-item"
+            onClick={() => setSelectedTask(task)}
+          >
+            <Card className="p-4 cursor-pointer hover:shadow-lg transition-shadow">
+              <div className="flex items-center space-x-3">
+                <span className="task-status" onClick={e => e.stopPropagation()}>
+                  {getStatusIcon(task.status)}
+                </span>
+                <div className="flex-1">
+                  <h3 className="font-medium">{task.title}</h3>
+                  <p className="text-sm text-gray-500">
+                    Due: {new Date(task.dueDate).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="mt-4"
+      >
+        {showCreateTask ? (
+          <CreateTask onCreateTask={handleCreateTask} taskListId={taskListId} />
+        ) : (
+          <Button
+            onClick={() => setShowCreateTask(true)}
+            variant="outline"
+            className="w-full"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Task
+          </Button>
+        )}
+      </motion.div>
+
+      <AnimatePresence mode="wait">
+        {selectedTask && (
+          <TaskDetails
+            key={selectedTask._id}
+            task={selectedTask}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={handleDeleteTask}
+            onClose={handleCloseTaskDetails}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
